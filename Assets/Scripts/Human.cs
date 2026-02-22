@@ -38,6 +38,6 @@ public abstract class Human : MonoBehaviour,IHuman
 
     public virtual void Kill()
     {
-        
+    
     }
 }

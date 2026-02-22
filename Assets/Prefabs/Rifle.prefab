@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5020942067450039518}
   - component: {fileID: 1830477163007788172}
   m_Layer: 0
-  m_Name: Pistol
+  m_Name: Rifle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -100,5 +100,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6dab5d76119f4e84084462e1e6aec261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gunAsset: {fileID: 11400000, guid: a93aa27b345bcd2439db0f3438197161, type: 2}
+  gunAsset: {fileID: 11400000, guid: d42a5f78dd701e14d9665be42feaacbb, type: 2}
   tracerPrefab: {fileID: 4106602600909203817, guid: feae38cab24c6794da2091de6a6a0e80, type: 3}
+  cameraForPlayer: {fileID: 0}
