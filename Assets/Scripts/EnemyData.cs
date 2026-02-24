@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "EnemyData", menuName = "Scriptable Objects/EnemyData")]
@@ -9,4 +10,5 @@ public class EnemyData : ScriptableObject
     public float maxHealth;
     public LayerMask layerMask;
     public Sprite spriteEnemy;
+    public int rewardForPlayer;
 }

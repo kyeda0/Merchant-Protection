@@ -1,36 +1,49 @@
+using System;
 using System.Collections;
-using UnityEditor;
+using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Experimental.AI;
 
 public class Enemy : Human
 {
-
+    public StateMachine stateMachine {get; private set;}
+    public  IdleStateEnemy idleStateEnemy {get; private set;}
+    public ChaseStateEnemy chaseStateEnemy {get; private set;}
+    public DeadStateEnemy deadStateEnemy {get; private set;}
+    public AttackEnemyState attackEnemyState{get; private set;}
+    public Transform target{get; private set;}
+    
+    private bool isSlowingDown;
+    private event Action<int> OnDead;
     [SerializeField] private EnemyData enemyConfig;
     [SerializeField] private float speed;
-    [SerializeField] private Transform target;
-    private bool isSlowingDown;
 
-    private void Start()
+    private void Awake()
+    {
+        stateMachine = new StateMachine();
+        idleStateEnemy = new IdleStateEnemy(this);
+        chaseStateEnemy = new ChaseStateEnemy(this);
+        deadStateEnemy = new DeadStateEnemy(this);
+        attackEnemyState = new AttackEnemyState(this);
+    }
+    protected override void Start()
     {
         health = enemyConfig.maxHealth;
         GetComponent<SpriteRenderer>().sprite = enemyConfig.spriteEnemy;
-        rigidbody2D = GetComponent<Rigidbody2D>();
         speed = enemyConfig.maxSpeed;
-    }
-    public override void TakeDamage(float damage)
-    {
-        base.TakeDamage(damage);
-
-        if(isSlowingDown == false && health > 0)
-            StartCoroutine(SlowingDown());
+        base.Start();
+        stateMachine.Initialize(idleStateEnemy);
     }
 
-    public override void Kill()
-    {
-        Destroy(gameObject);
-    }
     private void Update()
+    {
+        stateMachine.Update();
+    }
+    private void FixedUpdate()
+    {
+        stateMachine.FixedUpdate();
+    }
+    public void SearchTarget()
     {
         if (target == null)
         {
@@ -51,10 +64,8 @@ public class Enemy : Human
             if (distance > enemyConfig.rangeVision)
                 target = null;
         }
-}
-
-
-   public override void MovemenLogic()
+    }
+    public override void MovemenLogic()
     {
         if(target == null)
          return;
@@ -83,6 +94,24 @@ public class Enemy : Human
         yield return new WaitForSeconds(0.5f);
         speed = enemyConfig.maxSpeed;
         isSlowingDown = false;
+    }
+    public override void TakeDamage(float damage)
+    {
+        base.TakeDamage(damage);
+
+        if(isSlowingDown == false && health > 0)
+            StartCoroutine(SlowingDown());
+
+        if(health <= 0 )
+        {
+            stateMachine.ChangeState(deadStateEnemy);
+        }
+    }
+
+    public override void Kill()
+    {
+        OnDead?.Invoke(enemyConfig.rewardForPlayer);
+        Destroy(gameObject);
     }
 
 }

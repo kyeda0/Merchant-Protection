@@ -1,52 +1,51 @@
+using System;
 using System.Collections;
-using NUnit.Framework;
-using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
 
 public  class Guns : MonoBehaviour
 {
-    [SerializeField] private GunAsset  gunAsset;
+    public StateMachine stateMachine{ get; private set;}
+    public IdleStateGun idleStateGun{get; private set;}
+    public FireStateGun fireStateGun{get; private set;}
+    public RechargeStateGun rechargeStateGun{get; private set;}
+
+    public GunAsset  gunAsset;
     [SerializeField] private Tracer tracerPrefab;
     [SerializeField] private CameraForPlayer  cameraForPlayer;
-    private  int currentMagazine;
-    private float currentRateTime;
-    private bool isReloading;
-    
+    public  int currentMagazine {get; private set;}
+    public  float currentRateTime;
+    public bool isReloading {get; private set;}
+
+    private event Action onFire;
+
+    private void Awake()
+    {
+        stateMachine = new StateMachine();
+        idleStateGun = new IdleStateGun(this);
+        fireStateGun = new FireStateGun(this);
+        rechargeStateGun = new RechargeStateGun(this);
+    }
+
     private void Start()
     {
         GetComponent<SpriteRenderer>().sprite = gunAsset.spriteGun;
         cameraForPlayer = GameObject.FindWithTag("MainCamera").GetComponent<CameraForPlayer>();
         currentMagazine = gunAsset.maxMagazine;
         currentRateTime = gunAsset.maxRateTime;
+        stateMachine.Initialize(idleStateGun);
     }
 
     private void Update()
     {
-        currentRateTime -= Time.deltaTime;
-
-        if(Input.GetMouseButton(0) && currentRateTime <= 0)
-        {
-            AttackGun();
-            currentRateTime = gunAsset.maxRateTime;
-        }
-
-        if(currentMagazine <= 0 || Input.GetKeyDown(KeyCode.R))
-        {
-            StartCoroutine(ReloadTime());
-        }
+        stateMachine.Update();
     }
 
-    private void AttackGun()
+    public void AttackGun()
     {
-        if(isReloading)
-            return;
-        if (currentMagazine <= 0)  
-            return;
-
         currentMagazine--;
         RaycastHit2D hit = Physics2D.Raycast(transform.position,transform.up,gunAsset.distant);
-        Vector3 start = transform.position;
         Vector3 end;
         if (hit.collider != null)
         {
@@ -54,26 +53,34 @@ public  class Guns : MonoBehaviour
             Human enemyHealth = hit.collider.GetComponent<Human>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(gunAsset.damageGun);
+                enemyHealth.TakeDamage(Random.Range(gunAsset.minDamageGun,gunAsset.maxDamageGun));
             }
         }
         else 
         {
             end = transform.position + transform.up * gunAsset.distant;
         }
-
-        Instantiate(tracerPrefab).GetComponent<Tracer>().Init(start,end);
+        Tracer tracer = Instantiate(tracerPrefab);
+        tracer.GetComponent<Tracer>().Init(transform.position,end);
         cameraForPlayer.Shake(0.1f,gunAsset.shakePower);
     }   
 
+    public void CheckReload()
+    {
+        if(isReloading == false && (currentMagazine <= 0 || Input.GetKeyDown(KeyCode.R)))
+        {
+            stateMachine.ChangeState(rechargeStateGun);
+        }
+    }
 
-    private IEnumerator ReloadTime()
+
+    public IEnumerator ReloadTime()
     {
         isReloading = true;
-        Debug.Log("Перезарежаюсь");
+        Debug.Log("Перезаряжаюсь");
         yield return new WaitForSeconds(gunAsset.rechargeTime);
         currentMagazine = gunAsset.maxMagazine;
         isReloading = false;
-
+        stateMachine.ChangeState(idleStateGun);
     }
 }

@@ -1,9 +1,10 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CameraForPlayer : MonoBehaviour
 {
-    [SerializeField] private Transform player;
+    public Transform player;
     [SerializeField] private float smoothSpeed;
     [SerializeField] private float zOffset ;
     [SerializeField] private float MaxOffset;

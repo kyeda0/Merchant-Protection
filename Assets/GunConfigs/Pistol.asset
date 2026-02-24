@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Pistol
   m_EditorClassIdentifier: 
   spriteGun: {fileID: -4854829337826818713, guid: 7452ded69721c4b45ae86a7763d2a452, type: 3}
-  damageGun: 2
+  minDamageGun: 1
+  maxDamageGun: 5
   maxRateTime: 0.5
   maxMagazine: 30
   distant: 6
   rechargeTime: 3
   shakePower: 0.05
+  soundRechargeGun: {fileID: 0}
